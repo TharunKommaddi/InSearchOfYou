@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<style>
+    /* Realistic page turning effect */
+    .page-flip-container {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        perspective: 2000px;
+        pointer-events: none;
+        z-index: 1500;
+    }
+    
+    .page-flipper {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        transform-style: preserve-3d;
+        pointer-events: none;
+    }
+    
+    .page-front, .page-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        background-color: var(--letter-bg);
+        background-image: 
+            linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px),
+            linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px);
+        background-size: 20px 20px;
+        box-shadow: var(--letter-shadow);
+    }
+    
+    .page-front::before, .page-back::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAMbWlDQ1BJQ0MgUHJvZmlsZQAASImVVwdYU8kWnluSkJDQAghICb0J0gkgJYQWQHoRbIQkQCgxBoKKHVlUcC2oiGBFV0UUO2BnUez2sih2XSyoDMoiKrbKNwuQXfd93/vON3f+98w5c/535sxMJgOAeifPbC6F1QDINOXJo4L9aeMS42ikZ0AHFKABHnDiCRRmVnh4KMBotv69vLsOEMneVUdR65/9f2MKwpRMASPUxmmCFEEmA3AlAJcJFPN5ADCquX3pfHMJRqyTF0qA2KYEp8h...');
+        opacity: 0.2;
+        pointer-events: none;
+    }
+    
+    .page-back {
+        transform: rotateY(180deg);
+    }
+    
+    /* Page corner fold effect */
+    .page-fold {
+        position: absolute;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        pointer-events: all;
+        cursor: pointer;
+        z-index: 2000;
+        transition: all 0.3s ease;
+    }
+    
+    .page-fold.right-bottom {
+        right: 15px;
+        bottom: 15px;
+        border-width: 0 0 20px 20px;
+        border-color: transparent transparent rgba(0,0,0,0.1) transparent;
+        transform: rotate(0deg);
+    }
+    
+    .page-fold.left-bottom {
+        left: 15px;
+        bottom: 15px;
+        border-width: 0 0 20px 20px;
+        border-color: transparent transparent rgba(0,0,0,0.1) transparent;
+        transform: rotate(270deg);
+    }
+    
+    .page-fold:hover {
+        border-width: 0 0 30px 30px;
+    }
+    
+    /* Curving animations */
+    @keyframes turnPageRight {
+        0% {
+            transform: rotateY(0);
+            transform-origin: left center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        25% {
+            box-shadow: -10px 10px 20px rgba(0,0,0,0.2);
+            clip-path: polygon(0% 0%, 100% 0%, 90% 100%, 0% 100%);
+        }
+        50% {
+            transform: rotateY(-60deg) translateX(-5%);
+            transform-origin: left center;
+            box-shadow: -20px 15px 25px rgba(0,0,0,0.2);
+            clip-path: polygon(0% 0%, 100% 0%, 80% 100%, 0% 100%);
+        }
+        75% {
+            transform: rotateY(-120deg) translateX(-10%);
+            transform-origin: left center;
+            box-shadow: -10px 10px 20px rgba(0,0,0,0.1);
+            clip-path: polygon(0% 0%, 100% 0%, 90% 100%, 0% 100%);
+        }
+        100% {
+            transform: rotateY(-180deg);
+            transform-origin: left center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+    }
+    
+    @keyframes turnPageLeft {
+        0% {
+            transform: rotateY(0);
+            transform-origin: right center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        25% {
+            box-shadow: 10px 10px 20px rgba(0,0,0,0.2);
+            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 10% 100%);
+        }
+        50% {
+            transform: rotateY(60deg) translateX(5%);
+            transform-origin: right center;
+            box-shadow: 20px 15px 25px rgba(0,0,0,0.2);
+            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 20% 100%);
+        }
+        75% {
+            transform: rotateY(120deg) translateX(10%);
+            transform-origin: right center;
+            box-shadow: 10px 10px 20px rgba(0,0,0,0.1);
+            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 10% 100%);
+        }
+        100% {
+            transform: rotateY(180deg);
+            transform-origin: right center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+    }
+    
+    .turning-right .page-flipper {
+        animation: turnPageRight 1.2s ease-in-out forwards;
+    }
+    
+    .turning-left .page-flipper {
+        animation: turnPageLeft 1.2s ease-in-out forwards;
+    }
+    
+    /* Page turning shadow effect */
+    .page-shadow {
+        position: absolute;
+        top: 0;
+        opacity: 0;
+        height: 100%;
+        width: 100%;
+        background: linear-gradient(to right, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 100%);
+        pointer-events: none;
+    }
+    
+    .turning-right .page-shadow {
+        left: 0;
+        animation: shadowMoveRight 1.2s ease-in-out;
+    }
+    
+    .turning-left .page-shadow {
+        right: 0;
+        transform: rotateY(180deg);
+        animation: shadowMoveLeft 1.2s ease-in-out;
+    }
+    
+    @keyframes shadowMoveRight {
+        0% { opacity: 0; }
+        25% { opacity: 0.5; }
+        75% { opacity: 0.5; }
+        100% { opacity: 0; }
+    }
+    
+    @keyframes shadowMoveLeft {
+        0% { opacity: 0; }
+        25% { opacity: 0.5; }
+        75% { opacity: 0.5; }
+        100% { opacity: 0; }
+    }
+    
+    /* Page dog-ear effect */
+    .dog-ear {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 0 0 40px 40px;
+        border-color: transparent transparent var(--letter-bg) transparent;
+        box-shadow: -2px 2px 5px rgba(0,0,0,0.2);
+        opacity: 0;
+        transform-origin: right bottom;
+        pointer-events: none;
+    }
+    
+    .turning-right .dog-ear {
+        animation: dogEarAnimation 1.2s ease-in-out;
+    }
+    
+    @keyframes dogEarAnimation {
+        0% { opacity: 0; transform: rotate(0deg); }
+        25% { opacity: 1; transform: rotate(-10deg); }
+        75% { opacity: 1; transform: rotate(-5deg); }
+        100% { opacity: 0; transform: rotate(0deg); }
+    }
+    
+    /* Page turn sound effect */
+    .page-turn-sound {
+        display: none;
+    }
+    
+    /* Make index items colorful and add underline on hover */
+.index-link {
+    cursor: pointer;
+    color: var(--accent-color); /* Always colored now, not just on hover */
+    transition: color 0.3s ease, transform 0.2s ease;
+    display: block;
+    padding: 4px 0;
+    position: relative;
+}
+
+.index-link:hover {
+    transform: translateX(5px);
+}
+
+/* Add dot before index items */
+.index-link::before {
+    content: "•";
+    display: inline-block;
+    width: 15px;
+    color: var(--accent-color);
+    margin-right: 8px;
+    font-weight: bold;
+}
+
+/* Add underline effect on hover */
+.index-link::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: var(--accent-color);
+    transition: width 0.3s ease;
+}
+
+.index-link:hover::after {
+    width: 100%;
+}
+
+/* Quick transition for large page jumps */
+.quick-transition {
+    transition: opacity 0.3s ease;
+}
+</style>
+
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Guntur:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Book For You</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="book-container">
+        <div class="page" id="page-0">
+            <div class="cover-content">
+                <h1>For Tanuja</h1>
+                <div class="heart-icon">❤️</div>
+                <p class="author">From Tharun</p>
+            </div>
+        </div>
+        
+        <div class="page hidden" id="page-1">
+            <div class="letter-content">
+                <h2>Acknowledgement</h2>
+                <p>These letters are a collection of my deepest thoughts and feelings, written in moments of both joy and longing.</p>
+                <p>Each page is a piece of my heart, dedicated to you - Tanuja.</p>
+                <p>May these words remind you of how truly special you are, and how much you mean to me.</p>
+            </div>
+        </div>
+
+        <div class="page hidden" id="page-2">
+            <div class="letter-content index-page">
+                <h2>Index</h2>
+                <ol>
+                    </ol>
+            </div>
+        </div>
+
+        <div class="page hidden" id="page-3">
+            <div class="letter-content">
+                </div>
+        </div>
+        
+        <div class="page hidden" id="page-4">
+            <div class="letter-content">
+                </div>
+        </div>
+        
+        <div class="page hidden" id="page-5">
+            <div class="letter-content">
+                </div>
+        </div>
+        
+        <div class="page hidden" id="page-6">
+            <div class="letter-content">
+                </div>
+        </div>
+        
+        <div class="page hidden" id="page-7">
+            <div class="letter-content">
+                </div>
+        </div>
+        
+        <div class="page hidden" id="page-8">
+            <div class="letter-content">
+                </div>
+        </div>
+        
+        <div class="page hidden" id="page-9">
+            <div class="letter-content">
+                </div>
+        </div>
+        
+        <div class="page hidden" id="page-10">
+            <div class="letter-content">
+                </div>
+        </div>
+        
+        <div class="page hidden" id="page-11">
+            <div class="letter-content">
+                </div>
+        </div>
+        
+        <div class="page hidden" id="page-12">
+            <div class="letter-content">
+                </div>
+        </div>
+        
+        <div class="page hidden" id="page-13">
+            <div class="letter-content telugu-text">
+                </div>
+        </div>
+        
+        <div class="page hidden" id="page-14">
+            <div class="letter-content">
+                </div>
+        </div>
+        
+        <div class="page hidden" id="page-15">
+            <div class="letter-content">
+                </div>
+        </div>
+        
+        <div class="page hidden" id="page-16">
+            <div class="letter-content">
+                </div>
+        </div>
+        
+        <div class="page hidden" id="page-17">
+            <div class="letter-content">
+                </div>
+        </div>
+
+        <div class="page hidden" id="page-18">
+            <div class="letter-content">
+                </div>
+        </div>
+
+        <div class="page hidden" id="page-19">
+            <div class="letter-content">
+                </div>
+        </div>
+
+        <div class="page hidden" id="page-20">
+            <div class="letter-content">
+                </div>
+        </div>
+
+        <div class="page hidden" id="page-21">
+            <div class="letter-content">
+                </div>
+        </div>
+        
+        <div class="page hidden" id="page-22">
+            <div class="cover-content back-cover">
+                <p class="quote">"This is not just a memory...
+                It's a declaration etched on the spine of my life,
+                where you don't exist beside me — you exist within me.
+                Not in silence, not in softness, not in distance…
+                but in every space your love carved into my being.
+                When love becomes spiritual, physical presence is not needed - because its essence becomes eternal, woven into the soul."</p>
+                
+                <div class="heart-icon small">❤️</div>
+                <p class="ending">The End</p>
+            </div>
+        </div>
+        
+        <div class="page-corner left" id="prev-corner"></div>
+        <div class="page-corner right" id="next-corner"></div>
+        
+        <div class="swipe-instruction" id="swipe-instruction">
+            Swipe or tap corners to turn pages
+        </div>
+        
+        <div class="page-number" id="page-number"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
