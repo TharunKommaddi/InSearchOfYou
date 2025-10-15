@@ -240,55 +240,7 @@
         .swipe-instruction.hidden {
             opacity: 0;
         }
-
-        /* Index page styling */
-        .index-page ol {
-            padding-left: 20px;
-        }
-
-        .index-page li {
-            margin-bottom: 15px;
-            position: relative;
-        }
-
-        .index-link {
-            cursor: pointer;
-            color: var(--accent-color);
-            transition: color 0.3s ease, transform 0.2s ease;
-            display: block;
-            padding: 4px 0;
-            position: relative;
-        }
-
-        .index-link:hover {
-            transform: translateX(5px);
-            color: #c0392b;
-        }
-
-        .index-link::before {
-            content: "•";
-            display: inline-block;
-            width: 15px;
-            color: var(--accent-color);
-            margin-right: 8px;
-            font-weight: bold;
-        }
-
-        .index-link::after {
-            content: "";
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background-color: var(--accent-color);
-            transition: width 0.3s ease;
-        }
-
-        .index-link:hover::after {
-            width: 100%;
-        }
-
+        
         /* Realistic page turning effect */
         .page-flip-container {
             position: absolute;
@@ -457,41 +409,16 @@
         </div>
 
         <div class="page hidden" id="page-2">
-            <div class="letter-content index-page">
-                <h2>Index</h2>
-                <ol>
-                    </ol>
+            <div class="letter-content">
+                <p>Your story begins here...</p>
             </div>
         </div>
-
-        <div class="page hidden" id="page-3"><div class="letter-content"></div></div>
-        <div class="page hidden" id="page-4"><div class="letter-content"></div></div>
-        <div class="page hidden" id="page-5"><div class="letter-content"></div></div>
-        <div class="page hidden" id="page-6"><div class="letter-content"></div></div>
-        <div class="page hidden" id="page-7"><div class="letter-content"></div></div>
-        <div class="page hidden" id="page-8"><div class="letter-content"></div></div>
-        <div class="page hidden" id="page-9"><div class="letter-content"></div></div>
-        <div class="page hidden" id="page-10"><div class="letter-content"></div></div>
-        <div class="page hidden" id="page-11"><div class="letter-content"></div></div>
-        <div class="page hidden" id="page-12"><div class="letter-content"></div></div>
-        <div class="page hidden" id="page-13"><div class="letter-content"></div></div>
-        <div class="page hidden" id="page-14"><div class="letter-content"></div></div>
-        <div class="page hidden" id="page-15"><div class="letter-content"></div></div>
-        <div class="page hidden" id="page-16"><div class="letter-content"></div></div>
-        <div class="page hidden" id="page-17"><div class="letter-content"></div></div>
-        <div class="page hidden" id="page-18"><div class="letter-content"></div></div>
-        <div class="page hidden" id="page-19"><div class="letter-content"></div></div>
-        <div class="page hidden" id="page-20"><div class="letter-content"></div></div>
-        <div class="page hidden" id="page-21"><div class="letter-content"></div></div>
         
-        <div class="page hidden" id="page-22">
+        <div class="page hidden" id="page-3">
             <div class="cover-content back-cover">
                 <p class="quote">"This is not just a memory...
                 It's a declaration etched on the spine of my life,
-                where you don't exist beside me — you exist within me.
-                Not in silence, not in softness, not in distance…
-                but in every space your love carved into my being.
-                When love becomes spiritual, physical presence is not needed - because its essence becomes eternal, woven into the soul."</p>
+                where you don't exist beside me — you exist within me."</p>
                 
                 <div class="heart-icon small">❤️</div>
                 <p class="ending">The End</p>
@@ -513,7 +440,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Variables
             let currentPage = 0;
-            const totalPages = 23;
+            const totalPages = 4; // UPDATED: Changed from 23 to 4
             let isAnimating = false;
             
             // Elements
@@ -553,7 +480,6 @@
             // Initialize
             showPage(0);
             updatePageNumber();
-            setupIndexLinks();
             
             if (prevCorner) prevCorner.addEventListener('click', previousPage);
             if (nextCorner) nextCorner.addEventListener('click', nextPage);
@@ -587,75 +513,27 @@
                 return true;
             }
             
-            function setupIndexLinks() {
-                const indexItems = document.querySelectorAll('.index-page ol li');
-                if (!indexItems.length) return;
-                
-                indexItems.forEach((item, index) => {
-                    item.classList.add('index-link');
-                    item.setAttribute('tabindex', '0');
-                    const targetPage = index + 3;
-                    
-                    const navigate = () => {
-                        if (targetPage >= 0 && targetPage < totalPages) {
-                            goToPage(targetPage);
-                        }
-                    };
-
-                    item.addEventListener('click', navigate);
-                    item.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            navigate();
-                        }
-                    });
-                });
-            }
-            
             function goToPage(targetPage) {
                 if (isAnimating || targetPage === currentPage || targetPage < 0 || targetPage >= totalPages) return false;
                 
-                const jumpDistance = Math.abs(targetPage - currentPage);
-                if (jumpDistance > 3) {
-                    isAnimating = true;
-                    if (showPage(targetPage)) {
-                        updatePageNumber();
-                        bookContainer.classList.add('quick-transition');
-                        setTimeout(() => {
-                            bookContainer.classList.remove('quick-transition');
-                            isAnimating = false;
-                        }, 300);
-                    } else {
+                isAnimating = true;
+                if (showPage(targetPage)) {
+                    updatePageNumber();
+                    bookContainer.classList.add('quick-transition');
+                    setTimeout(() => {
+                        bookContainer.classList.remove('quick-transition');
                         isAnimating = false;
-                    }
+                    }, 300);
                 } else {
-                    turnPagesSequence(targetPage, targetPage > currentPage ? 'forward' : 'backward');
+                    isAnimating = false;
                 }
                 return true;
             }
-            
-            function turnPagesSequence(targetPage, direction) {
-                if (isAnimating) return;
-                isAnimating = true;
-                
-                function turnNext() {
-                    if ((direction === 'forward' && currentPage >= targetPage) || (direction === 'backward' && currentPage <= targetPage)) {
-                        isAnimating = false;
-                        return;
-                    }
-                    
-                    if (direction === 'forward') nextPage(true);
-                    else previousPage(true);
-                    
-                    setTimeout(turnNext, 650); // Slightly more than animation time
-                }
-                turnNext();
-            }
 
-            function nextPage(isSequence = false) {
-                if ((isAnimating && !isSequence) || currentPage >= totalPages - 1) return false;
+            function nextPage() {
+                if (isAnimating || currentPage >= totalPages - 1) return false;
                 
-                if (!isSequence) isAnimating = true;
+                isAnimating = true;
                 performPageTurn(currentPage, 'right');
                 
                 setTimeout(() => {
@@ -663,15 +541,15 @@
                         updatePageNumber();
                         playPageTurnSound();
                     }
-                    if (!isSequence) setTimeout(() => isAnimating = false, 300);
+                    setTimeout(() => isAnimating = false, 300);
                 }, 300);
                 return true;
             }
 
-            function previousPage(isSequence = false) {
-                if ((isAnimating && !isSequence) || currentPage <= 0) return false;
+            function previousPage() {
+                if (isAnimating || currentPage <= 0) return false;
                 
-                if (!isSequence) isAnimating = true;
+                isAnimating = true;
                 performPageTurn(currentPage, 'left');
                 
                 setTimeout(() => {
@@ -679,7 +557,7 @@
                         updatePageNumber();
                         playPageTurnSound();
                     }
-                    if (!isSequence) setTimeout(() => isAnimating = false, 300);
+                    setTimeout(() => isAnimating = false, 300);
                 }, 300);
                 return true;
             }
@@ -719,7 +597,12 @@
             
             function updatePageNumber() {
                 if (pageNumber) {
-                    pageNumber.textContent = (currentPage > 0 && currentPage < totalPages - 1) ? `${currentPage} / ${totalPages - 2}` : '';
+                    // Show page numbers like "1 / 2", "2 / 2" on the two content pages
+                    if (currentPage > 0 && currentPage < totalPages - 1) {
+                         pageNumber.textContent = `${currentPage} / ${totalPages - 2}`;
+                    } else {
+                        pageNumber.textContent = '';
+                    }
                 }
                 if (leftFold) leftFold.style.visibility = currentPage > 0 ? 'visible' : 'hidden';
                 if (rightFold) rightFold.style.visibility = currentPage < totalPages - 1 ? 'visible' : 'hidden';
